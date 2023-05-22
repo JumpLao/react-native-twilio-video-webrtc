@@ -23,9 +23,25 @@ class TwilioVideoParticipantView extends Component {
       videoTrackSid: PropTypes.string.isRequired,
     }),
   };
+  constructor(props) {
+    super(props)
+    this.container = React.createRef();
+  }
   componentDidMount() {
-    const remoteView = document.getElementById(`videoremoteview-${this.props.trackIdentifier.participantSid}`)
-    remoteView.append(this.props.track.attach())
+    const room = window._room
+    const {
+      participantSid,
+      videoTrackSid
+    } = this.props.trackIdentifier
+    const participant = room.participants.get(participantSid)
+    const publicationTrack = participant.tracks.get(videoTrackSid)
+    this.container.current.append(publicationTrack.track.attach())
+    const video = Array.from(this.container.current.getElementsByTagName('video'))
+    video.forEach((video) => {
+      video.style.objectFit = this.props.scaleType === "fit" ? 'fill' : 'cover'
+      video.style.width = '100%'
+      video.style.height = '100%'
+    })
   }
   render() {
     const scalesType = this.props.scaleType === "fit" ? 1 : 2;
@@ -33,7 +49,7 @@ class TwilioVideoParticipantView extends Component {
       // <RCTTWRemoteVideoView scalesType={scalesType} {...this.props}>
       //   {this.props.children}
       // </RCTTWRemoteVideoView>
-      <View nativeID={`videoremoteview-${this.props.trackIdentifier.participantSid}`} scalesType={scalesType} {...this.props}>
+      <View ref={this.container} scalesType={scalesType} {...this.props}>
         {this.props.children}
       </View>
     );

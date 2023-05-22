@@ -369,19 +369,16 @@ export default class TwilioVideo extends Component {
   }
   roomDidConnect = async () => {
     const room = this._room
-    console.log('room connected', room)
+    const event = new CustomEvent("roomDidConnect", { detail: {
+      room
+    } });
+    window._room = room
+    window.dispatchEvent(event)
     this.props.onRoomDidConnect({
       roomName: room.name,
       localParticipant: room.localParticipant,
       participants: room.participants
     });
-    // render local track
-    const localView = document.getElementById('videolocalview')
-    room.localParticipant.tracks.forEach((publicationTrack) => {
-      console.log(publicationTrack, localView)
-      localView.append(publicationTrack.track.attach())
-    })
-    
 
     // subscribe room
     room.participants.forEach(participant => this.participantConnected(participant));
