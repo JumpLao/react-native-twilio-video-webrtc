@@ -52,6 +52,7 @@
     }
   },
   "dependencies": {
-    "prop-types": "^15.5.10"
+    "prop-types": "^15.5.10",
+    "twilio-video": "^2.27.0"
   }
 }
