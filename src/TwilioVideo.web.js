@@ -475,15 +475,18 @@ export default class TwilioVideo extends Component {
     //   cameraType
     // );
     const facingMode = cameraType === 'front' ? 'user' : 'environment'
-    const track = await Video.createLocalVideoTrack({
-      facingMode
+    const tracks = await Video.createLocalTracks({
+      video: {
+        facingMode
+      },
+      audio: true,
     })
     const room = await Video.connect(accessToken, {
       name: roomName,
       audio: enableAudio,
       video: enableVideo,
       dominantSpeaker: dominantSpeakerEnabled,
-      tracks: [track]
+      tracks: tracks
     })
     this._room = room
     this.roomDidConnect()
