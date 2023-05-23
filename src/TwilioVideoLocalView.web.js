@@ -32,14 +32,16 @@ class TwilioVideoLocalView extends Component {
         room
       } = event.detail
       room.localParticipant.tracks.forEach((publicationTrack) => {
-        const html = publicationTrack.track.attach()
-        this.container.current.append(html)
-        const video = Array.from(this.container.current.getElementsByTagName('video'))
-        video.forEach((video) => {
-          video.style.objectFit = this.props.scaleType === "fit" ? 'fill' : 'cover'
-          video.style.width = '100%'
-          video.style.height = '100%'
-        })
+        if (publicationTrack.track.attach) {
+          const html = publicationTrack.track.attach()
+          this.container.current.append(html)
+          const video = Array.from(this.container.current.getElementsByTagName('video'))
+          video.forEach((video) => {
+            video.style.objectFit = this.props.scaleType === "fit" ? 'fill' : 'cover'
+            video.style.width = '100%'
+            video.style.height = '100%'
+          })
+        }
       })
     })
   }

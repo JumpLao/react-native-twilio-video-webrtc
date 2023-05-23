@@ -35,11 +35,11 @@ class TwilioVideoParticipantView extends Component {
     } = this.props.trackIdentifier
     const participant = room.participants.get(participantSid)
     // const publicationTrack = participant.tracks.get(videoTrackSid)
-
-    debugger
     Array.from(participant.tracks, ([trackSid, publicationTrack]) => {
       // console.log(trackSid, publicationTrack)
-      this.container.current.append(publicationTrack.track.attach())
+      if (publicationTrack?.track?.attach) {
+        this.container.current.append(publicationTrack.track.attach())
+      }
     })
     // this.container.current.append(publicationTrack.track.attach())
     const video = Array.from(this.container.current.getElementsByTagName('video'))
