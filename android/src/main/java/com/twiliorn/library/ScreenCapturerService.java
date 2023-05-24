@@ -16,7 +16,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
+// import android.support.v4.app.NotificationCompat;
 
 @TargetApi(29)
 public class ScreenCapturerService extends Service {
@@ -56,18 +56,18 @@ public class ScreenCapturerService extends Service {
         assert manager != null;
         manager.createNotificationChannel(chan);
 
-        final int notificationId = (int) System.currentTimeMillis();
-        NotificationCompat.Builder notificationBuilder =
-                new NotificationCompat.Builder(this, CHANNEL_ID);
-        Notification notification =
-                notificationBuilder
-                        .setOngoing(true)
-                        // .setSmallIcon(R.drawable.ic_screen_share_white_24dp)
-                        .setContentTitle("ScreenCapturerService is running in the foreground")
-                        .setPriority(NotificationManager.IMPORTANCE_MIN)
-                        .setCategory(Notification.CATEGORY_SERVICE)
-                        .build();
-        startForeground(notificationId, notification);
+        // final int notificationId = (int) System.currentTimeMillis();
+        // NotificationCompat.Builder notificationBuilder =
+        //         new NotificationCompat.Builder(this, CHANNEL_ID);
+        // Notification notification =
+        //         notificationBuilder
+        //                 .setOngoing(true)
+        //                 // .setSmallIcon(R.drawable.ic_screen_share_white_24dp)
+        //                 .setContentTitle("ScreenCapturerService is running in the foreground")
+        //                 .setPriority(NotificationManager.IMPORTANCE_MIN)
+        //                 .setCategory(Notification.CATEGORY_SERVICE)
+        //                 .build();
+        // startForeground(notificationId, notification);
     }
 
     public void endForeground() {
