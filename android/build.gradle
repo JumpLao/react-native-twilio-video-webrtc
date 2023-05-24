@@ -49,6 +49,7 @@ dependencies {
     def androidSupportVersion = rootProject.hasProperty("androidSupportVersion")  ? rootProject.androidSupportVersion : DEFAULT_ANDROID_SUPPORT_VERSION
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:support-v4:$androidSupportVersion"
     implementation "com.android.support:appcompat-v7:$androidSupportVersion"
     implementation "com.twilio:video-android:7.6.1"
     implementation "com.facebook.react:react-native:+"  // From node_modules
