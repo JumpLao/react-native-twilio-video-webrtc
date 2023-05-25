@@ -16,6 +16,10 @@ import * as Video from 'twilio-video';
 export default class TwilioVideo extends Component {
   static propTypes = {
     /**
+     * Callback that is called when screen share permission received.
+     */
+    onScreenShareChanged: PropTypes.func,
+    /**
      * Called when the room has connected
      *
      * @param {{roomName, participants}}
@@ -156,6 +160,7 @@ export default class TwilioVideo extends Component {
     ...View.propTypes,
   };
   static defaultProps = {
+    onScreenShareChanged: () => {},
     /**
      * Called when the room has connected
      *
@@ -289,12 +294,17 @@ export default class TwilioVideo extends Component {
      */
     onDominantSpeakerDidChange: () => {},
   }
+  state = {
+    track: null,
+    videoTrack: null,
+    audioTrack: null,
+    screenTrack: null,
+    dataTrack: null
+  }
   constructor(props) {
     super(props);
 
     this._subscriptions = [];
-    // this._eventEmitter = new NativeEventEmitter(TWVideoModule);
-    this._room = null;
   }
 
   componentDidMount() {
@@ -309,6 +319,7 @@ export default class TwilioVideo extends Component {
     this._unregisterEvents();
     this._stopLocalVideo();
     this._stopLocalAudio();
+    this.disconnect()
   }
 
   /**
@@ -331,12 +342,24 @@ export default class TwilioVideo extends Component {
    */
   setLocalVideoEnabled(enabled) {
     // return TWVideoModule.setLocalVideoEnabled(enabled);
+    if (enabled) {
+      this.state.videoTrack && this.state.videoTrack.enable()
+    } else {
+      this.state.videoTrack && this.state.videoTrack.disable()
+    }
+    return Promise.resolve(enabled)
   }
 
   /**
    * Enable or disable local audio
    */
   setLocalAudioEnabled(enabled) {
+    if (enabled) {
+      this.state.audioTrack && this.state.audioTrack.enable()
+    } else {
+      this.state.audioTrack && this.state.audioTrack.disable()
+    }
+    return Promise.resolve(enabled)
     // return TWVideoModule.setLocalAudioEnabled(enabled);
   }
 
@@ -345,6 +368,45 @@ export default class TwilioVideo extends Component {
    */
   flipCamera() {
     // TWVideoModule.flipCamera();
+  }
+  /**
+   * Toggle screen sharing
+   */
+  setScreenShareEnabled = async (enabled) => {
+    // TWVideoModule.toggleScreenShare(enabled)
+    const room = this.state.room
+    if (enabled) {
+      navigator.mediaDevices.getDisplayMedia().then(async stream => {
+        const screenTrack = new Video.LocalVideoTrack(stream.getTracks()[0]);
+        screenTrack.mediaStreamTrack.onended = () => { 
+          this.setScreenShareEnabled(false)
+        };
+        room.localParticipant.publishTrack(screenTrack);
+        await new Promise((resolve) => {
+          this.setState({
+            screenTrack
+          }, resolve)
+        })
+        this.props.onScreenShareChanged({
+          screenShareEnabled: enabled
+        })
+      }).catch((e) => {
+        console.log(e)
+        alert('Could not share the screen.')
+      });
+    } else { // disable screen share
+      const screenTrack = this.state.screenTrack
+      room.localParticipant.unpublishTrack(screenTrack);
+      screenTrack.stop();
+      await new Promise((resolve) => {
+        this.setState({
+          screenTrack: null
+        }, resolve)
+      })
+      this.props.onScreenShareChanged({
+        screenShareEnabled: enabled
+      })
+    }
   }
 
   /**
@@ -368,7 +430,7 @@ export default class TwilioVideo extends Component {
     // TWVideoModule.getStats();
   }
   roomDidConnect = async () => {
-    const room = this._room
+    const room = this.state.room
     const event = new CustomEvent("roomDidConnect", { detail: {
       room
     } });
@@ -476,20 +538,31 @@ export default class TwilioVideo extends Component {
     // );
     const facingMode = cameraType === 'front' ? 'user' : 'environment'
     const dataTrack = new Video.LocalDataTrack()
-    const tracks = await Video.createLocalTracks({
-      video: {
-        facingMode
-      },
-      audio: true,
+    const videoTrack = await Video.createLocalVideoTrack({
+      facingMode
     })
+    const audioTrack = await Video.createLocalAudioTrack()
+    // const tracks = await Video.createLocalTracks({
+    //   video: {
+    //     facingMode
+    //   },
+    //   audio: true,
+    // })
     const room = await Video.connect(accessToken, {
       name: roomName,
-      audio: enableAudio,
-      video: enableVideo,
+      audio: false,
+      video: false,
       dominantSpeaker: dominantSpeakerEnabled,
-      tracks: [...tracks, dataTrack]
+      tracks: [videoTrack, audioTrack, dataTrack]
     })
-    this._room = room
+    await new Promise((resolve) => {
+      this.setState({
+        room,
+        audioTrack,
+        dataTrack,
+        videoTrack
+      }, resolve)
+    })
     this.roomDidConnect()
     return Promise.resolve(room)
   }
@@ -499,6 +572,8 @@ export default class TwilioVideo extends Component {
    */
   disconnect() {
     // TWVideoModule.disconnect();
+    this.state.room && this.state.room.disconnect()
+    this.props.onRoomDidDisconnect({})
   }
 
   /**
@@ -537,20 +612,44 @@ export default class TwilioVideo extends Component {
     // TWVideoModule.sendString(message);
   }
 
-  _startLocalVideo() {
+  async _startLocalVideo(facingMode = 'user') {
     // TWVideoModule.startLocalVideo();
+    // this.state.room && this.state.room.localParticipant.videoTracks.forEach(publicationTrack => {
+    //   publicationTrack.track.enable();
+    // });
+    // const track = await Video.createLocalVideoTrack({
+    //   facingMode
+    // })
+    // this.state.room && this.state.room.localParticipant.publishTrack(track)
+    // this.setState({
+    //   videoTrack: track
+    // })
   }
 
   _stopLocalVideo() {
     // TWVideoModule.stopLocalVideo();
+    // this.state.room && this.state.room.localParticipant.videoTracks.forEach(publicationTrack => {
+    //   publicationTrack.track.enable();
+    // });
   }
 
-  _startLocalAudio() {
+  async _startLocalAudio() {
     // TWVideoModule.startLocalAudio();
+    // this.state.room && this.state.room.localParticipant.audioTracks.forEach(publicationTrack => {
+    //   publicationTrack.track.enable();
+    // });
+    // const track = await Video.createLocalAudioTrack()
+    // this.state.room && this.state.room.localParticipant.publishTrack(track)
+    // this.setState({
+    //   audioTrack: track
+    // })
   }
 
-  _stopLocalAudio() {
+  _stopLocalAudio = () => {
     // TWVideoModule.stopLocalAudio();
+    // this.state.room && this.state.room.localParticipant.audioTracks.forEach(publicationTrack => {
+    //   publicationTrack.track.disable();
+    // });
   }
 
   _unregisterEvents() {
