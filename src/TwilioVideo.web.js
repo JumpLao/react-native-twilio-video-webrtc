@@ -486,7 +486,9 @@ export default class TwilioVideo extends Component {
     switch(track.kind) {
       case 'data':
         track.on('message', data => {
-          this.props.onDataTrackMessageReceived(data)
+          this.props.onDataTrackMessageReceived({
+            message: data
+          })
         });
         this.props.onParticipantAddedDataTrack(eventObj)
         break;
