@@ -493,9 +493,33 @@ export default class TwilioVideo extends Component {
         this.props.onParticipantAddedDataTrack(eventObj)
         break;
       case 'audio':
+        track.on('disabled', () => {
+          this.props.onParticipantDisabledAudioTrack({
+            participant,
+            track
+          })
+        });
+        track.on('enabled', () => {
+          this.props.onParticipantEnabledAudioTrack({
+            participant,
+            track
+          })
+        });
         this.props.onParticipantAddedAudioTrack(eventObj)
         break;
       case 'video':
+        track.on('disabled', () => {
+          this.props.onParticipantDisabledVideoTrack({
+            participant,
+            track
+          })
+        });
+        track.on('enabled', () => {
+          this.props.onParticipantEnabledVideoTrack({
+            participant,
+            track
+          })
+        });
         this.props.onParticipantAddedVideoTrack(eventObj)
         break;
     }
