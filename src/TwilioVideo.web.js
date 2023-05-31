@@ -381,6 +381,8 @@ export default class TwilioVideo extends Component {
         screenTrack.mediaStreamTrack.onended = () => { 
           this.setScreenShareEnabled(false)
         };
+        // add track name
+        room.localParticipant.unpublishTrack(this.state.videoTrack);
         room.localParticipant.publishTrack(screenTrack);
         await new Promise((resolve) => {
           this.setState({
@@ -397,6 +399,7 @@ export default class TwilioVideo extends Component {
     } else { // disable screen share
       const screenTrack = this.state.screenTrack
       room.localParticipant.unpublishTrack(screenTrack);
+      room.localParticipant.publishTrack(this.state.videoTrack);
       screenTrack.stop();
       await new Promise((resolve) => {
         this.setState({
@@ -447,7 +450,10 @@ export default class TwilioVideo extends Component {
     room.on('participantConnected', participant => this.participantConnected(participant));
 
     room.on('participantDisconnected', participant => this.participantDisconnected(participant));
-    room.once('disconnected', error => room.participants.forEach(participant => this.participantDisconnected(participant)));
+    room.once('disconnected', error => {
+      this.props.onRoomDidDisconnect({roomName: disconnectedRoom.name, error: disconnectedRoom.error });
+      room.participants.forEach(participant => this.participantDisconnected(participant))
+    });
   }
   participantConnected = (participant) => {
     console.log('participant connected', participant, this)
@@ -457,7 +463,7 @@ export default class TwilioVideo extends Component {
 
     participant.tracks.forEach(publication => {
       if (publication.isSubscribed) {
-        this.trackSubscribed(participant, track);
+        this.trackSubscribed(participant, publication.track);
       }
     });
   }
@@ -479,10 +485,13 @@ export default class TwilioVideo extends Component {
     }
     switch(track.kind) {
       case 'data':
+        track.on('message', data => {
+          this.props.onDataTrackMessageReceived(data)
+        });
         this.props.onParticipantAddedDataTrack(eventObj)
         break;
       case 'audio':
-        this.props.onParticipantAddedDataTrack(eventObj)
+        this.props.onParticipantAddedAudioTrack(eventObj)
         break;
       case 'video':
         this.props.onParticipantAddedVideoTrack(eventObj)
@@ -610,6 +619,7 @@ export default class TwilioVideo extends Component {
    */
   sendString(message) {
     // TWVideoModule.sendString(message);
+    this.state.dataTrack.send(message)
   }
 
   async _startLocalVideo(facingMode = 'user') {
