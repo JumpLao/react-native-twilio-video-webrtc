@@ -450,7 +450,7 @@ export default class TwilioVideo extends Component {
     room.on('participantConnected', participant => this.participantConnected(participant));
 
     room.on('participantDisconnected', participant => this.participantDisconnected(participant));
-    room.once('disconnected', error => {
+    room.once('disconnected', disconnectedRoom => {
       this.props.onRoomDidDisconnect({roomName: disconnectedRoom.name, error: disconnectedRoom.error });
       room.participants.forEach(participant => this.participantDisconnected(participant))
     });
