@@ -366,7 +366,7 @@ export default class TwilioVideo extends Component {
       }),
       this._eventEmitter.addListener("participantAddedVideoTrack", (data) => {
         if (this.props.onParticipantAddedVideoTrack) {
-          this.props.onParticipantAddedVideoTrack(data);
+          this.props.onParticipantAddedVideoTrack({...data, enabled: data.track.enabled});
         }
       }),
       this._eventEmitter.addListener("participantAddedDataTrack", (data) => {

@@ -30,6 +30,7 @@ class TwilioRemotePreview extends React.Component {
     // Whether to apply Z ordering to this view.  Setting this to true will cause
     // this view to appear above other Twilio Video views.
     applyZOrder: PropTypes.bool,
+    scaleType: PropTypes.oneOf(["fit", "fill"]),
   };
 
   buildNativeEventWrappers() {

@@ -795,13 +795,15 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
         if (cameraCapturer != null && localVideoTrack != null) {
             localVideoTrack.enable(enabled);
-            publishLocalVideo(enabled);
-
-            if(!enabled) {
-                localVideoTrack.release();
-                localVideoTrack = null;
-                cameraCapturer = null;
+            if (enabled) {
+                publishLocalVideo(enabled);
             }
+
+            // if(!enabled) {
+            //     localVideoTrack.release();
+            //     localVideoTrack = null;
+            //     cameraCapturer = null;
+            // }
 
             WritableMap event = new WritableNativeMap();
             event.putBoolean("videoEnabled", enabled);
@@ -858,7 +860,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
         isScreenShareEnabled = true;
 
-        localVideoTrack = LocalVideoTrack.create(getContext(), true, screenCapturer);
+        localVideoTrack = LocalVideoTrack.create(getContext(), true, screenCapturer, "screen");
 
         if (thumbnailVideoView != null && localVideoTrack != null) {
             localVideoTrack.addSink(thumbnailVideoView);
@@ -888,6 +890,21 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             WritableMap event = new WritableNativeMap();
             event.putBoolean("screenShareEnabled", false);
             pushEvent(CustomTwilioVideoView.this, ON_SCREEN_SHARE_CHANGED, event);
+        }
+
+        if (cameraCapturer == null && localVideoTrack == null) {
+            String fallbackCameraType = cameraType == null ? CustomTwilioVideoView.FRONT_CAMERA_TYPE : cameraType;
+            boolean createVideoStatus = createLocalVideo(isVideoEnabled, fallbackCameraType);
+            if (!createVideoStatus) {
+                Log.d("RNTwilioVideo", "Failed to create local video");
+                return;
+            }
+
+            localVideoTrack.enable(isVideoEnabled);
+            publishLocalVideo(true);
+            WritableMap event = new WritableNativeMap();
+            event.putBoolean("videoEnabled", isVideoEnabled);
+            pushEvent(CustomTwilioVideoView.this, ON_VIDEO_CHANGED, event);
         }
     }
 
@@ -1430,9 +1447,10 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     private WritableMap buildTrack(TrackPublication publication) {
         WritableMap trackMap = new WritableNativeMap();
+        trackMap.putString("sid", publication.getTrackSid());
         trackMap.putString("trackSid", publication.getTrackSid());
-        trackMap.putString("trackName", publication.getTrackName());
-        trackMap.putBoolean("enabled", publication.isTrackEnabled());
+        trackMap.putString("name", publication.getTrackName());
+        trackMap.putBoolean("isEnabled", publication.isTrackEnabled());
         return trackMap;
     }
 
@@ -1465,6 +1483,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     private void addParticipantVideo(Participant participant, RemoteVideoTrackPublication publication) {
         WritableMap event = this.buildParticipantVideoEvent(participant, publication);
+        event.putBoolean("enabled", publication.isTrackEnabled());
         pushEvent(CustomTwilioVideoView.this, ON_PARTICIPANT_ADDED_VIDEO_TRACK, event);
     }
 

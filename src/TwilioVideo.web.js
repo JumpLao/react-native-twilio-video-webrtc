@@ -376,39 +376,25 @@ export default class TwilioVideo extends Component {
     // TWVideoModule.toggleScreenShare(enabled)
     const room = this.state.room
     if (enabled) {
-      navigator.mediaDevices.getDisplayMedia().then(async stream => {
-        const screenTrack = new Video.LocalVideoTrack(stream.getTracks()[0]);
+      const stream = await navigator.mediaDevices.getDisplayMedia();
+        const screenTrack = new Video.LocalVideoTrack(stream.getTracks()[0], {name: 'screen'});
         screenTrack.mediaStreamTrack.onended = () => { 
           this.setScreenShareEnabled(false)
         };
         // add track name
-        room.localParticipant.unpublishTrack(this.state.videoTrack);
-        room.localParticipant.publishTrack(screenTrack);
-        await new Promise((resolve) => {
-          this.setState({
-            screenTrack
-          }, resolve)
-        })
-        this.props.onScreenShareChanged({
-          screenShareEnabled: enabled
-        })
-      }).catch((e) => {
-        console.log(e)
-        alert('Could not share the screen.')
-      });
+        await room.localParticipant.unpublishTrack(this.state.videoTrack);
+        await room.localParticipant.publishTrack(screenTrack);
+        this.setState({ screenTrack });
+        this.props.onScreenShareChanged({ screenShareEnabled: enabled });
     } else { // disable screen share
       const screenTrack = this.state.screenTrack
-      room.localParticipant.unpublishTrack(screenTrack);
-      room.localParticipant.publishTrack(this.state.videoTrack);
-      screenTrack.stop();
-      await new Promise((resolve) => {
-        this.setState({
-          screenTrack: null
-        }, resolve)
-      })
-      this.props.onScreenShareChanged({
-        screenShareEnabled: enabled
-      })
+      if (screenTrack) {
+        await room.localParticipant.unpublishTrack(screenTrack);
+        await room.localParticipant.publishTrack(this.state.videoTrack);
+        screenTrack.stop();
+      }
+      this.setState({ screenTrack: null });
+      this.props.onScreenShareChanged({ screenShareEnabled: enabled });
     }
   }
 
@@ -481,7 +467,8 @@ export default class TwilioVideo extends Component {
       track: {
         ...track,
         trackSid: track.sid
-      }
+      },
+      enabled: track.isEnabled,
     }
     switch(track.kind) {
       case 'data':

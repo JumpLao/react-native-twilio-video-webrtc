@@ -44,7 +44,7 @@ class TwilioVideoParticipantView extends Component {
     // this.container.current.append(publicationTrack.track.attach())
     const video = Array.from(this.container.current.getElementsByTagName('video'))
     video.forEach((video) => {
-      video.style.objectFit = this.props.scaleType === "fit" ? 'fill' : 'cover'
+      video.style.objectFit = this.props.scaleType === "fit" ? 'contain' : 'cover'
       video.style.width = '100%'
       video.style.height = '100%'
     })
