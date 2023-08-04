@@ -795,15 +795,13 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
         if (cameraCapturer != null && localVideoTrack != null) {
             localVideoTrack.enable(enabled);
-            if (enabled) {
-                publishLocalVideo(enabled);
-            }
+            publishLocalVideo(enabled);
 
-            // if(!enabled) {
-            //     localVideoTrack.release();
-            //     localVideoTrack = null;
-            //     cameraCapturer = null;
-            // }
+            if(!enabled) {
+                localVideoTrack.release();
+                localVideoTrack = null;
+                cameraCapturer = null;
+            }
 
             WritableMap event = new WritableNativeMap();
             event.putBoolean("videoEnabled", enabled);
