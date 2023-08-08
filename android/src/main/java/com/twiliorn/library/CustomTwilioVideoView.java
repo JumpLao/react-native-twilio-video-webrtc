@@ -239,6 +239,9 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         @Override
         public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
             Log.d("RNTwilioScreenShare", "Got activity result " + requestCode + " " + resultCode);
+            if (localParticipant == null) {
+                return;
+            }
             super.onActivityResult(activity, requestCode, resultCode, data);
             if (requestCode == REQUEST_MEDIA_PROJECTION) {
                 Log.d("RNTwilioScreenShare", "Request for the screen capture permission");
@@ -795,13 +798,16 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
         if (cameraCapturer != null && localVideoTrack != null) {
             localVideoTrack.enable(enabled);
-            publishLocalVideo(enabled);
 
-            if(!enabled) {
-                localVideoTrack.release();
-                localVideoTrack = null;
-                cameraCapturer = null;
+            if (enabled) {
+                publishLocalVideo(enabled);
             }
+
+            // if(!enabled) {
+            //     localVideoTrack.release();
+            //     localVideoTrack = null;
+            //     cameraCapturer = null;
+            // }
 
             WritableMap event = new WritableNativeMap();
             event.putBoolean("videoEnabled", enabled);
